@@ -42,7 +42,7 @@ class GeoLocationService:
     def set_display_physical_location(self, physical_location: str):
         self.physical_location = physical_location
 
-    def get_country(self, city:str, state:str = None):
+    def get_country(self, city:str, state:str = None, postal_code:str = None):
         country_name = ""
         max_importance = 0
         api_params = {
@@ -54,6 +54,12 @@ class GeoLocationService:
 
         if state:
             api_params['state'] = state
+
+        if postal_code:
+            api_params['postalcode'] = postal_code
+
+            if city.strip() == '':
+                api_params.pop('city')
 
         try:
             geo_res = requests.get(
@@ -75,7 +81,7 @@ class GeoLocationService:
 
 
            
-    def search_geo_location(self, city: str, country:str, province:str = None):
+    def search_geo_location(self, city: str, country:str, province:str = None, postal_code:str = None):
         geo_res_json = None
         api_params = {
             'city': city,
@@ -86,6 +92,12 @@ class GeoLocationService:
 
         if province:
             api_params['state'] = province
+
+        if postal_code:
+            api_params['postalcode'] = postal_code
+
+            if city.strip() == '':
+                api_params.pop('city')
 
         if country.lower() == 'united states':
             api_params['polygon_geojson'] = 1

@@ -14,6 +14,7 @@ class HousesFacade:
         report_file_name: str = None,
         country: str = None,
         state: str = None,
+        postal_code:str = None,
         listing_type: str = 'for_sale',
         use_proxy: bool = False, 
         get_summary: bool = True,
@@ -148,6 +149,14 @@ class HousesFacade:
 
         self.houses_df = realtor_service_obj.transform(df=houses_df)
         houses_df = self.houses_df
+
+        if postal_code and 'Postal Code' in houses_df.columns:
+            print(f"Filtering for Postal Code contains: {postal_code}")
+            houses_df = houses_df[
+                houses_df['Postal Code'].str.contains(postal_code.replace(' ', '').upper())
+            ]
+            print(f"Number of listings found after filtering: {houses_df.shape[0]}")
+
 
         if get_summary:
             if listing_type == 'for_sale':
