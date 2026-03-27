@@ -3,7 +3,7 @@ from realtorCa import RealtorCa
 
 class RealtorFactory:
 
-    def get_realtor(self, country: str, config: str = None):
+    def get_realtor(self, country: str):
 
         country = country.lower().strip()
 

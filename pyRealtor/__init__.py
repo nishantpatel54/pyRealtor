@@ -3,7 +3,6 @@ from pyRealtor.realtor import Realtor
 from pyRealtor.facade import HousesFacade
 from pyRealtor.proxy import Proxy
 from pyRealtor.realtorCa import RealtorCa
-from pyRealtor.realtorCom import RealtorCom
 from pyRealtor.realtorFactory import RealtorFactory
 
 __version__ = "0.2.6"
@@ -14,6 +13,5 @@ __all__ = [
     "HousesFacade",
     "Proxy",
     "RealtorCa",
-    "RealtorCom",
     "RealtorFactory"
 ]
