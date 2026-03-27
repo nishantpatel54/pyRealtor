@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 
-from pyRealtor.geo import GeoLocationService
+from geo import GeoLocationService
 
 
 class Realtor(ABC):

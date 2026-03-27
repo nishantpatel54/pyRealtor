@@ -1,14 +1,13 @@
 import requests
 from requests.adapters import HTTPAdapter, Retry
 
-from pyRealtor.geo import GeoLocationService
-from pyRealtor.report import ReportingService
-from pyRealtor.proxy import Proxy
-from pyRealtor.realtor import Realtor
+from geo import GeoLocationService
+from proxy import Proxy
+from realtor import Realtor
 
 class RealtorCa(Realtor):
 
-    def __init__(self, report_obj: ReportingService):
+    def __init__(self):
         self.search_api_endpoint = "https://api2.realtor.ca/Listing.svc/PropertySearch_Post"
         self.search_api_params = {
             'Version': '7.0',
@@ -35,7 +34,7 @@ class RealtorCa(Realtor):
             "Sec-Fetch-Site": "same-site",
             'User-Agent': "Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/97.0.4692.99 Mobile Safari/537.36"
         }
-        self.report_obj = report_obj
+        self.house_json_lst = []
 
     def set_geo_coordinate_boundry(self, geo_location_obj: GeoLocationService):
         try:
@@ -78,18 +77,6 @@ class RealtorCa(Realtor):
         }
 
         self.search_api_params["TransactionTypeId"] = transaction_type_to_id_dict[transaction_type.lower()]
-        
-        if transaction_type.lower() == "for_sale":
-            keep_col = "Price"
-            remove_col = "Rent"
-        else:
-            keep_col = "Rent"
-            remove_col = "Price"
-
-        if remove_col in self.report_obj.column_lst:
-            self.report_obj.column_lst.remove(remove_col)
-        if keep_col not in self.report_obj.column_lst:
-            self.report_obj.column_lst.append(keep_col)
 
     def set_built_year_range(self, built_year_range: tuple):
         built_year_min, built_year_max = built_year_range
@@ -139,7 +126,7 @@ class RealtorCa(Realtor):
                 }
             )
 
-            #print(get_api_response)
+            print(get_api_response)
 
             json_search_payload['CurrentPage'] = str(current_page_number)
             s.headers.update(self.search_api_headers)
@@ -210,7 +197,7 @@ class RealtorCa(Realtor):
             
             if realtor_api_response.status_code == 200:
                 search_result = realtor_api_response.json()
-                self.report_obj.house_json_lst.extend(search_result["Results"])
+                self.house_json_lst.extend(search_result["Results"])
                 total_available_pages = search_result["Paging"]["TotalPages"]
      
                 while current_page_number < total_available_pages:
@@ -260,11 +247,11 @@ class RealtorCa(Realtor):
                         #print(s.cookies.get_dict())
 
                     if realtor_api_response is None:
-                        listings_received = len(self.report_obj.house_json_lst)
+                        listings_received = len(self.house_json_lst)
                         print(f"Total listings received: {listings_received}, no more proxies available to connect, please try after some time")
                     elif realtor_api_response.status_code == 200:
                         search_result = realtor_api_response.json()
-                        self.report_obj.house_json_lst.extend(search_result["Results"])
+                        self.house_json_lst.extend(search_result["Results"])
                     
             elif realtor_api_response.status_code == 403:
                 print(realtor_api_response.text)
@@ -273,4 +260,4 @@ class RealtorCa(Realtor):
         except Exception as e:
             raise
 
-        return self.report_obj
+        return self.house_json_lst

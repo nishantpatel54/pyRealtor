@@ -5,14 +5,13 @@ import yaml
 import json
 import datetime
 
-from pyRealtor.geo import GeoLocationService
-from pyRealtor.report import ReportingService
-from pyRealtor.proxy import Proxy
-from pyRealtor.realtor import Realtor
+from geo import GeoLocationService
+from proxy import Proxy
+from realtor import Realtor
 
 class RealtorCom(Realtor):
 
-    def __init__(self, report_obj: ReportingService):
+    def __init__(self):
         self.search_api_endpoint = "https://www.realtor.com/api/v1/rdc_search_srp"
         self.search_api_params = {
             'client_id': 'rdc-search-for-sale-search',
@@ -43,7 +42,7 @@ class RealtorCom(Realtor):
                 }
             }
         }
-        self.report_obj = report_obj
+        self.house_json_lst = []
 
     def set_geo_coordinate_boundry(self, geo_location_obj: GeoLocationService):
         if geo_location_obj.polygon_boundry:
@@ -189,7 +188,7 @@ class RealtorCom(Realtor):
 
             if realtor_api_response.status_code == 200:
                 search_result = realtor_api_response.json()
-                self.report_obj.house_json_lst.extend(search_result["data"]["home_search"]["properties"])
+                self.house_json_lst.extend(search_result["data"]["home_search"]["properties"])
 
                 total_available_listings = search_result["data"]["home_search"]["total"]
                 total_current_page_listings = search_result["data"]["home_search"]["count"]
@@ -238,14 +237,14 @@ class RealtorCom(Realtor):
 
                     #print(realtor_api_response.status_code)
                     if realtor_api_response is None:
-                        listings_received = len(self.report_obj.house_json_lst)
+                        listings_received = len(self.house_json_lst)
                         print(f"Total listings received: {listings_received}, no more proxies available to connect, please try after some time")
                     elif realtor_api_response.status_code == 200:
                         search_result = realtor_api_response.json()
                         if search_result["data"]["home_search"] is not None and search_result["data"]["home_search"]["count"] > 0:
                             total_available_listings = search_result["data"]["home_search"]["total"]
                             total_current_page_listings = search_result["data"]["home_search"]["count"]
-                            self.report_obj.house_json_lst.extend(search_result["data"]["home_search"]["properties"])
+                            self.house_json_lst.extend(search_result["data"]["home_search"]["properties"])
                         else:
                             break
 
@@ -258,4 +257,4 @@ class RealtorCom(Realtor):
         except Exception as e:
             raise
 
-        return self.report_obj
+        return self.house_json_lst

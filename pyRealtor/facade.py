@@ -1,5 +1,5 @@
-from pyRealtor.geo import GeoLocationService
-from pyRealtor.realtorFactory import RealtorFactory
+from geo import GeoLocationService
+from realtorFactory import RealtorFactory
 
 class HousesFacade:
 
@@ -52,9 +52,7 @@ class HousesFacade:
         if 'open_house_date' in kwargs:
             realtor_service_obj.set_open_house_only(kwargs['open_house_date'])
 
-        report_obj = realtor_service_obj.search_houses(use_proxy)
-
-        return report_obj.house_json_lst
+        return realtor_service_obj.search_houses(use_proxy)
     
 if __name__ == "__main__":
     import json

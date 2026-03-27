@@ -8,15 +8,13 @@ import json
 import numpy as np
 import re
 
-from pyRealtor.geo import GeoLocationService
-from pyRealtor.report import ReportingService
-#from report import ReportingService
-from pyRealtor.proxy import Proxy
-from pyRealtor.realtor import Realtor
+from geo import GeoLocationService
+from proxy import Proxy
+from realtor import Realtor
 
 class HousingCom(Realtor):
 
-    def __init__(self, report_obj: ReportingService):
+    def __init__(self):
         self.search_api_endpoint = "https://mightyzeus-mum.housing.com/api/gql"
         self.search_api_params = {
             'isBot': False,
@@ -42,7 +40,7 @@ class HousingCom(Realtor):
         self.type_ahead_api_body = copy.deepcopy(self.search_api_body)
         self.hash_api_body = copy.deepcopy(self.search_api_body)
 
-        self.report_obj = report_obj
+        self.house_json_lst = []
 
     def set_sort_method(self, by: str, ascending_order: bool):
         pass
@@ -290,7 +288,7 @@ class HousingCom(Realtor):
 
         if search_api_res.status_code == 200:
             search_result = search_api_res.json()
-            self.report_obj.house_json_lst.extend(search_result['data']['searchResults']['properties'])
+            self.house_json_lst.extend(search_result['data']['searchResults']['properties'])
 
             total_available_listings = search_result["data"]["searchResults"]["config"]["pageInfo"]["totalCount"]
             total_current_page_listings = search_result["data"]["searchResults"]["config"]["pageInfo"]["size"]
@@ -324,7 +322,7 @@ class HousingCom(Realtor):
 
                 if search_api_res.status_code == 200:
                     search_result = search_api_res.json()
-                    self.report_obj.house_json_lst.extend(search_result['data']['searchResults']['properties'])
+                    self.house_json_lst.extend(search_result['data']['searchResults']['properties'])
 
                     total_available_listings = search_result["data"]["searchResults"]["config"]["pageInfo"]["totalCount"]
                     total_current_page_listings = search_result["data"]["searchResults"]["config"]["pageInfo"]["size"]
@@ -348,7 +346,7 @@ class HousingCom(Realtor):
         else:
             raise Exception(f"Expected 200 response, but received SEARCH_API response: {search_api_res.status_code}")
         
-        return self.report_obj
+        return self.house_json_lst
 
 
     
@@ -360,36 +358,10 @@ if __name__ == "__main__":
     #print(country)
     print(geo_result_json)
 
-    housing_obj = HousingCom(
-                ReportingService(
-                    column_mapping_cfg_fpath = "config/column_mapping_cfg_housing_com.json",
-                    column_lst = [
-                        'ID', 'Bedrooms', 'Bathrooms', 'Size', 
-                        'House Category', 
-                        'Price', 'Address', "Realtor Brokerage", "Website", "Latitude", "Longitude", "InsertedDate",
-                        "SubID", "label", "SubSize", "SubPrice"
-                    ],
-                    summary_col_lst = ['Bedrooms', 'House Category']
-                )
-            )
+    housing_obj = HousingCom()
 
     
     housing_obj.set_transaction_type(transaction_type='for_sale')
     housing_obj.set_geo_coordinate_boundry(geo_location_obj=geo_service_obj)
-    houses_df = housing_obj.search_houses().to_dataframe()
-
-    houses_df.to_excel('./test_1.xlsx', index=False)
-
-    houses_df = housing_obj.transform(houses_df=houses_df)
-    summary_df = housing_obj.report_obj.get_average(
-        dataframe=houses_df,
-        average_col_name='Price'
-    )
-
-    housing_obj.report_obj.save_excel(
-                houses_df,
-                "./test.xlsx",
-                summary_dataframe=summary_df
-            )
-
-    print(houses_df)
+    listings = housing_obj.search_houses()
+    print(listings)
