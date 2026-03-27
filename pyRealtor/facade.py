@@ -20,6 +20,9 @@ class HousesFacade:
         if country is None:
             country = geo_service_obj.get_country(city=search_area, state=state)
 
+        if country.lower().strip() != "canada":
+            raise ValueError(f"Only Canada is currently supported, however received {country}")
+
         realtor_service_obj = RealtorFactory().get_realtor(country=country)
 
         geo_result_json = geo_service_obj.search_geo_location(

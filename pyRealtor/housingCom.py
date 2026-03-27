@@ -1,10 +1,9 @@
 import requests
 from requests.adapters import HTTPAdapter, Retry
-import pkg_resources
+from pathlib import Path
 import yaml
 import pandas as pd
 import copy
-import json
 import numpy as np
 import re
 
@@ -158,9 +157,12 @@ class HousingCom(Realtor):
 
         s.mount('https://', HTTPAdapter(max_retries=retries))
 
-        graph_ql_dict = {}
-        with pkg_resources.resource_stream('pyRealtor', 'config/graphql_queries_housing.yml') as graph_ql_yaml:
-            graph_ql_dict = yaml.safe_load(graph_ql_yaml)
+        config_path = Path(__file__).resolve().parent / "config" / "graphql_queries_housing.yml"
+        try:
+            with config_path.open("r", encoding="utf-8") as graph_ql_yaml:
+                graph_ql_dict = yaml.safe_load(graph_ql_yaml)
+        except FileNotFoundError:
+            raise FileNotFoundError(f"Missing GraphQL config file: {config_path}")
 
         if "city_list_function" in graph_ql_dict:
             self.city_lst_api_body["query"] = graph_ql_dict["city_list_function"]

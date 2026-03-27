@@ -1,8 +1,7 @@
 import requests
 from requests.adapters import HTTPAdapter, Retry
-import pkg_resources
+from pathlib import Path
 import yaml
-import json
 import datetime
 
 from geo import GeoLocationService
@@ -106,24 +105,28 @@ class RealtorCom(Realtor):
         search_result = None
         self.search_api_body["query"] = ""
 
-        with pkg_resources.resource_stream('pyRealtor', 'config/graphql_queries.yml') as graph_ql_yaml:
-            try:
+        config_path = Path(__file__).resolve().parent / "config" / "graphql_queries.yml"
+        try:
+            with config_path.open("r", encoding="utf-8") as graph_ql_yaml:
                 search_params_dict = yaml.safe_load(graph_ql_yaml)
-                search_query = search_params_dict["search_function_graphql"]
-                search_cols = search_params_dict["search_houses_columns"]
 
-                search_cols.format(
-                        EXTRA_PROPERTIES_COLUMNS = ''
-                    )
-                
-                search_query_formatted = search_query.format(
-                    SEARCH_COLUMNS = search_cols.format(
-                        EXTRA_PROPERTIES_COLUMNS = ''
-                    )
+            search_query = search_params_dict["search_function_graphql"]
+            search_cols = search_params_dict["search_houses_columns"]
+
+            search_cols.format(
+                    EXTRA_PROPERTIES_COLUMNS = ''
                 )
-            except yaml.YAMLError as exc:
-                print(exc)
-                raise
+
+            search_query_formatted = search_query.format(
+                SEARCH_COLUMNS = search_cols.format(
+                    EXTRA_PROPERTIES_COLUMNS = ''
+                )
+            )
+        except FileNotFoundError:
+            raise FileNotFoundError(f"Missing GraphQL config file: {config_path}")
+        except yaml.YAMLError as exc:
+            print(exc)
+            raise
 
         self.search_api_body["query"] = search_query_formatted
 
